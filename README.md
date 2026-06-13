@@ -126,9 +126,10 @@ dindin-finance/
 └── package.json
 ```
 
-## 👤 Autor
+## 👤 Autor e créditos
 
-Desenvolvido por **[CaioX](https://github.com/CaioXDeveloper)**.
+- **Código-fonte:** desenvolvido por **[CaioX](https://github.com/CaioXDeveloper)**
+- **Documentação (`README.md`):** gerada com assistência do **[Cursor](https://cursor.com)**
 
 ## 📄 Licença
 
@@ -136,6 +137,6 @@ Distribuído sob a licença [MIT](LICENSE).
 
 <div align="center">
 
-Feito com 🪙 e ☕ por CaioX
+Código por **CaioX** · Documentação com **Cursor**
 
 </div>
