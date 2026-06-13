@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DinDin.AI — Controle Financeiro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" defer></script>
+</head>
+<body>
+  <div class="app">
+    <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menu" aria-expanded="false">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M4 6h16M4 12h16M4 18h16"/>
+      </svg>
+    </button>
+
+    <aside class="sidebar" id="sidebar" aria-label="Navegação principal">
+      <div class="sidebar-header">
+        <h1 class="logo">
+          <span class="logo-name">DinDin</span><span class="logo-accent">.AI</span>
+        </h1>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="nav-item active" type="button" data-section="dashboard">
+          <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item" type="button" data-section="despesas">
+          <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+          <span>Despesas</span>
+        </button>
+        <button class="nav-item" type="button" data-section="chat">
+          <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span>Chat</span>
+        </button>
+      </nav>
+    </aside>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" hidden></div>
+
+    <main class="main-content">
+      <!-- Dashboard -->
+      <section class="section active" id="section-dashboard" aria-labelledby="dashboard-title">
+        <header class="section-header">
+          <div>
+            <h2 id="dashboard-title" class="section-title">Dashboard</h2>
+            <p class="section-subtitle">Visão geral dos seus gastos</p>
+          </div>
+          <div class="month-picker">
+            <label for="dashboardMes" class="month-picker-label">Período</label>
+            <input type="month" id="dashboardMes" class="input-month">
+          </div>
+        </header>
+
+        <!-- Skeleton: cards -->
+        <div class="skeleton-cards cards-grid" id="skeletonCards" aria-hidden="true">
+          <div class="skeleton skeleton-card"></div>
+          <div class="skeleton skeleton-card"></div>
+          <div class="skeleton skeleton-card"></div>
+        </div>
+
+        <!-- Cards resumo -->
+        <div class="cards-grid hidden" id="cardsContent">
+          <article class="card stat-card stat-card--highlight">
+            <div class="stat-card-header">
+              <svg class="stat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+              <span class="stat-label">Total do mês</span>
+            </div>
+            <p class="stat-value stat-value--hero mono" id="cardTotal" data-value="0">R$ 0,00</p>
+            <p class="stat-variation" id="cardTotalVar">—</p>
+          </article>
+          <article class="card stat-card">
+            <div class="stat-card-header">
+              <svg class="stat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+              </svg>
+              <span class="stat-label">Maior gasto</span>
+            </div>
+            <p class="stat-value mono" id="cardMaior">—</p>
+            <p class="stat-meta" id="cardMaiorSub"></p>
+          </article>
+          <article class="card stat-card">
+            <div class="stat-card-header">
+              <svg class="stat-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>
+              </svg>
+              <span class="stat-label">Categoria top</span>
+            </div>
+            <p class="stat-value" id="cardCategoria">—</p>
+            <p class="stat-meta mono" id="cardCategoriaSub"></p>
+          </article>
+        </div>
+
+        <div class="dashboard-grid">
+          <!-- Gráfico -->
+          <article class="card chart-card">
+            <h3 class="card-title">Gastos por categoria</h3>
+            <div class="chart-wrapper" id="chartWrapper">
+              <div class="skeleton-chart" id="skeletonChart" aria-hidden="true">
+                <div class="skeleton skeleton-chart-circle"></div>
+                <div class="skeleton-chart-legend">
+                  <div class="skeleton skeleton-legend-line"></div>
+                  <div class="skeleton skeleton-legend-line"></div>
+                  <div class="skeleton skeleton-legend-line"></div>
+                  <div class="skeleton skeleton-legend-line"></div>
+                </div>
+              </div>
+              <div class="chart-content hidden" id="chartContent">
+                <div class="chart-doughnut-wrap">
+                  <canvas id="chartDoughnut" aria-label="Gráfico de gastos por categoria"></canvas>
+                  <div class="chart-center" id="chartCenter">
+                    <span class="chart-center-value mono" id="chartCenterValue">R$ 0</span>
+                    <span class="chart-center-label">total</span>
+                  </div>
+                </div>
+                <div class="chart-legend" id="chartLegend"></div>
+              </div>
+              <div class="empty-state hidden" id="chartEmpty">
+                <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <circle cx="32" cy="32" r="28" stroke="currentColor" stroke-width="2" opacity="0.2"/>
+                  <path d="M32 20v24M20 32h24" stroke="currentColor" stroke-width="2" opacity="0.3"/>
+                </svg>
+                <p>Nenhum gasto neste mês</p>
+              </div>
+            </div>
+          </article>
+
+          <!-- Últimas despesas -->
+          <article class="card list-card">
+            <h3 class="card-title">Últimas despesas</h3>
+            <div class="skeleton-list" id="skeletonRecent" aria-hidden="true">
+              <div class="skeleton-list-item">
+                <div class="skeleton skeleton-avatar"></div>
+                <div class="skeleton-list-text">
+                  <div class="skeleton skeleton-line"></div>
+                  <div class="skeleton skeleton-line skeleton-line--short"></div>
+                </div>
+              </div>
+              <div class="skeleton-list-item">
+                <div class="skeleton skeleton-avatar"></div>
+                <div class="skeleton-list-text">
+                  <div class="skeleton skeleton-line"></div>
+                  <div class="skeleton skeleton-line skeleton-line--short"></div>
+                </div>
+              </div>
+              <div class="skeleton-list-item">
+                <div class="skeleton skeleton-avatar"></div>
+                <div class="skeleton-list-text">
+                  <div class="skeleton skeleton-line"></div>
+                  <div class="skeleton skeleton-line skeleton-line--short"></div>
+                </div>
+              </div>
+            </div>
+            <ul class="expense-list hidden" id="recentList"></ul>
+            <div class="empty-state hidden" id="recentEmpty">
+              <p>Nenhuma despesa registrada</p>
+            </div>
+          </article>
+        </div>
+
+        <!-- Chat compacto no dashboard -->
+        <article class="card chat-panel" id="chatPanelDashboard">
+          <h3 class="card-title">Assistente DinDin</h3>
+          <div class="chat-messages" id="chatMessagesDash" role="log" aria-live="polite"></div>
+          <div class="chat-suggestions" id="chatSuggestionsDash" role="group" aria-label="Sugestões"></div>
+          <form class="chat-form" id="chatFormDash">
+            <input type="text" class="chat-input" id="chatInputDash" placeholder="Pergunte sobre seus gastos..." autocomplete="off" maxlength="2000" aria-label="Mensagem">
+            <button type="submit" class="chat-send" aria-label="Enviar mensagem">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <path d="M12 19V5M5 12l7-7 7 7"/>
+              </svg>
+            </button>
+          </form>
+        </article>
+      </section>
+
+      <!-- Despesas -->
+      <section class="section" id="section-despesas" aria-labelledby="despesas-title">
+        <header class="section-header">
+          <div>
+            <h2 id="despesas-title" class="section-title">Despesas</h2>
+            <p class="section-subtitle">Gerencie seus gastos</p>
+          </div>
+          <button type="button" class="btn btn-accent" id="btnNovaDespesa">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+            Nova despesa
+          </button>
+        </header>
+
+        <div class="filters-bar card">
+          <div class="float-field float-field--select">
+            <select id="filtroCategoria" aria-label="Filtrar por categoria">
+              <option value="">Todas as categorias</option>
+              <option value="Alimentação">🍔 Alimentação</option>
+              <option value="Transporte">🚌 Transporte</option>
+              <option value="Moradia">🏠 Moradia</option>
+              <option value="Saúde">💊 Saúde</option>
+              <option value="Lazer">🎮 Lazer</option>
+              <option value="Educação">📚 Educação</option>
+              <option value="Outros">📦 Outros</option>
+            </select>
+            <label for="filtroCategoria">Categoria</label>
+          </div>
+          <div class="month-picker">
+            <label for="filtroMes" class="month-picker-label">Mês</label>
+            <input type="month" id="filtroMes" class="input-month">
+          </div>
+        </div>
+
+        <article class="card">
+          <div class="skeleton-list" id="skeletonDespesas" aria-hidden="true">
+            <div class="skeleton-list-item">
+              <div class="skeleton skeleton-avatar"></div>
+              <div class="skeleton-list-text">
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line skeleton-line--short"></div>
+              </div>
+            </div>
+            <div class="skeleton-list-item">
+              <div class="skeleton skeleton-avatar"></div>
+              <div class="skeleton-list-text">
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line skeleton-line--short"></div>
+              </div>
+            </div>
+            <div class="skeleton-list-item">
+              <div class="skeleton skeleton-avatar"></div>
+              <div class="skeleton-list-text">
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line skeleton-line--short"></div>
+              </div>
+            </div>
+            <div class="skeleton-list-item">
+              <div class="skeleton skeleton-avatar"></div>
+              <div class="skeleton-list-text">
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line skeleton-line--short"></div>
+              </div>
+            </div>
+            <div class="skeleton-list-item">
+              <div class="skeleton skeleton-avatar"></div>
+              <div class="skeleton-list-text">
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line skeleton-line--short"></div>
+              </div>
+            </div>
+          </div>
+          <div class="error-state hidden" id="despesasError">
+            <p id="despesasErrorMsg">Erro ao carregar despesas.</p>
+            <button type="button" class="btn btn-ghost" id="btnRetryDespesas">Tentar novamente</button>
+          </div>
+          <div class="empty-state hidden" id="despesasEmpty">
+            <svg class="empty-illustration" width="80" height="80" viewBox="0 0 80 80" fill="none" aria-hidden="true">
+              <rect x="16" y="24" width="48" height="40" rx="8" stroke="currentColor" stroke-width="2" opacity="0.3"/>
+              <path d="M28 36h24M28 44h16M28 52h20" stroke="currentColor" stroke-width="2" opacity="0.2"/>
+              <circle cx="56" cy="20" r="12" stroke="currentColor" stroke-width="2" opacity="0.25"/>
+              <path d="M52 20h8M56 16v8" stroke="currentColor" stroke-width="2" opacity="0.3"/>
+            </svg>
+            <p>Nenhuma despesa encontrada</p>
+            <button type="button" class="btn btn-accent" id="btnEmptyAdd">Adicionar primeiro gasto</button>
+          </div>
+          <ul class="expense-list hidden" id="despesasList" role="list"></ul>
+        </article>
+      </section>
+
+      <!-- Chat fullscreen -->
+      <section class="section section--chat" id="section-chat" aria-labelledby="chat-title">
+        <header class="section-header section-header--chat">
+          <div class="chat-header-info">
+            <div class="chat-avatar" aria-hidden="true">D</div>
+            <div>
+              <h2 id="chat-title" class="section-title">DinDin</h2>
+              <p class="section-subtitle">Assistente financeiro</p>
+            </div>
+          </div>
+        </header>
+        <article class="card chat-full">
+          <div class="skeleton-chat hidden" id="skeletonChat" aria-hidden="true">
+            <div class="skeleton-chat-bubble skeleton-chat-bubble--right">
+              <div class="skeleton skeleton-bubble-line"></div>
+              <div class="skeleton skeleton-bubble-line skeleton-bubble-line--short"></div>
+            </div>
+            <div class="skeleton-chat-bubble skeleton-chat-bubble--left">
+              <div class="skeleton skeleton-bubble-line"></div>
+              <div class="skeleton skeleton-bubble-line"></div>
+              <div class="skeleton skeleton-bubble-line skeleton-bubble-line--short"></div>
+            </div>
+          </div>
+          <div class="chat-messages" id="chatMessages" role="log" aria-live="polite"></div>
+          <div class="chat-suggestions" id="chatSuggestions" role="group" aria-label="Sugestões"></div>
+          <form class="chat-form" id="chatForm">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Pergunte sobre seus gastos..." autocomplete="off" maxlength="2000" aria-label="Mensagem">
+            <button type="submit" class="chat-send" id="btnChatEnviar" aria-label="Enviar mensagem">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <path d="M12 19V5M5 12l7-7 7 7"/>
+              </svg>
+            </button>
+          </form>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal nova despesa -->
+  <div class="modal-overlay hidden" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <header class="modal-header">
+        <h3 id="modalTitle">Nova despesa</h3>
+        <button type="button" class="modal-close" id="modalClose" aria-label="Fechar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </header>
+      <form id="despesaForm" class="modal-form" novalidate>
+        <div class="float-field">
+          <input type="text" id="descricao" name="descricao" placeholder=" " required maxlength="255" autocomplete="off">
+          <label for="descricao">Descrição</label>
+          <span class="field-error hidden" id="errorDescricao"></span>
+        </div>
+        <div class="float-field float-field--currency">
+          <span class="currency-prefix">R$</span>
+          <input type="number" id="valor" name="valor" placeholder=" " required min="0.01" step="0.01" class="mono">
+          <label for="valor">Valor</label>
+          <span class="field-error hidden" id="errorValor"></span>
+        </div>
+        <div class="float-field float-field--select">
+          <select id="categoria" name="categoria" required>
+            <option value="" disabled selected></option>
+            <option value="Alimentação">🍔 Alimentação</option>
+            <option value="Transporte">🚌 Transporte</option>
+            <option value="Moradia">🏠 Moradia</option>
+            <option value="Saúde">💊 Saúde</option>
+            <option value="Lazer">🎮 Lazer</option>
+            <option value="Educação">📚 Educação</option>
+            <option value="Outros">📦 Outros</option>
+          </select>
+          <label for="categoria">Categoria</label>
+          <span class="field-error hidden" id="errorCategoria"></span>
+        </div>
+        <div class="float-field">
+          <input type="date" id="data" name="data" placeholder=" " required>
+          <label for="data">Data</label>
+          <span class="field-error hidden" id="errorData"></span>
+        </div>
+        <button type="submit" class="btn btn-submit" id="btnSalvar">Salvar despesa</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="/js/app.js" defer></script>
+  <script src="/js/despesas.js" defer></script>
+  <script src="/js/graficos.js" defer></script>
+  <script src="/js/chat.js" defer></script>
+</body>
+</html>
